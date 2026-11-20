@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Journal of Computer Science and Technology — Article Index &amp; Search</title>
+<title>Journal of Computer Science and Technology — Article Index &amp; Search (2023–present)</title>
 <style>
   :root{
     /* Palace red (故宫红 #A03020) + teal accent */
@@ -84,6 +84,19 @@
   .dl-btn:hover{background:#1a3859;border-color:#1a3859;box-shadow:0 2px 6px rgba(39,76,119,.3)}
   .dl-btn:disabled{opacity:.45;cursor:not-allowed}
   .meta-actions{display:flex;align-items:center;gap:2px}
+  /* download dropdown */
+  .dl-wrap{position:relative;display:inline-block}
+  .dl-wrap .dl-btn{margin-left:8px}
+  .dl-menu{position:absolute;top:calc(100% + 6px);right:0;z-index:50;display:none;
+    min-width:170px;background:#fff;border:1px solid #d5e2ef;border-radius:10px;
+    box-shadow:0 8px 24px rgba(26,56,89,.18);padding:6px}
+  .dl-menu.open{display:block}
+  .dl-count{background:#f7f5f4;color:#7a8794;font-size:11.5px;padding:7px 12px;
+    border-radius:6px;margin-bottom:4px;white-space:nowrap}
+  .dl-menu button{display:block;width:100%;text-align:left;background:none;border:0;
+    cursor:pointer;font-size:13px;color:#274c77;padding:8px 12px;border-radius:6px;white-space:nowrap}
+  .dl-menu button:hover{background:#e8eef5}
+  .dl-menu button span{color:#8a97a4;font-size:11.5px;float:right;margin-left:16px;padding-top:2px}
 
   /* cards */
   .list{list-style:none}
@@ -191,7 +204,7 @@
       </div>
     </div>
     <div class="header-bar">
-      <span class="page-title">Article Index &amp; Search &middot; 2023&ndash;2026</span>
+      <span class="page-title">Article Index &amp; Search &middot; 2023&ndash;present</span>
       <nav>
         <a href="https://jcst.ict.ac.cn/" target="_blank" rel="noopener">Journal Website</a>
         <a href="https://mc03.manuscriptcentral.com/jcst" target="_blank" rel="noopener">Submission Link</a>
@@ -216,9 +229,17 @@
     <span id="count"></span>
     <span class="meta-actions">
       <button class="sort" id="sort">Sort: Newest first</button>
-      <button class="dl-btn" id="dl-csv" title="Download all results as CSV (full info)">Download CSV</button>
-      <button class="dl-btn" id="dl-excel" title="Download all results as formatted Excel (.xlsx)">Download Excel</button>
-      <button class="dl-btn" id="dl-json" title="Download all results as JSON (full info)">Download JSON</button>
+      <span class="dl-wrap" id="dl-wrap">
+        <button class="dl-btn" id="dl-toggle" aria-haspopup="true" aria-expanded="false">Download Results &#9662;</button>
+        <span class="dl-menu" id="dl-menu" role="menu">
+          <div class="dl-count" id="dl-count">Current results &middot; 370 articles</div>
+          <button type="button" role="menuitem" data-dl="csv">CSV <span>all fields</span></button>
+          <button type="button" role="menuitem" data-dl="excel">Excel <span>formatted .xlsx</span></button>
+          <button type="button" role="menuitem" data-dl="json">JSON <span>full info</span></button>
+          <button type="button" role="menuitem" data-dl="bib">BibTeX <span>citation</span></button>
+          <button type="button" role="menuitem" data-dl="ris">RIS <span>citation</span></button>
+        </span>
+      </span>
     </span>
   </div>
 
@@ -226,7 +247,7 @@
   <div class="empty" id="empty" style="display:none">No articles match your search.</div>
 
   <footer>
-    Index of 347 articles published 2023&ndash;2026, compiled from Web of Science author records and the journal's official site.<br>
+    Index of 370 articles published 2023&ndash;present, compiled from Web of Science author records and the journal's official site.<br>
     Research topics are assigned from author keywords, with abstracts used where keywords are ambiguous; some articles remain unclassified.<br>
     Citation strings are generated from bibliographic metadata; please verify against the publisher record before use.
   </footer>
@@ -365,6 +386,7 @@
       return (a.title||'').localeCompare(b.title||'');
     });
     $('count').textContent = view.length+' article'+(view.length===1?'':'s')+' found';
+    $('dl-count').textContent = 'Current results · '+view.length+' article'+(view.length===1?'':'s');
     $('empty').style.display = view.length?'none':'block';
     $('list').innerHTML = view.map(function(a,i){
       var url='https://doi.org/'+a.doi;
@@ -472,6 +494,27 @@
       return o;
     });
     download('JCST_search_results.json',JSON.stringify(out,null,2),'application/json');
+  }
+  // ---- batch citation export of the CURRENT view; unique keys across the set ----
+  function exportBibtex(){
+    if(!view.length) return;
+    var used={}, parts=[];
+    view.forEach(function(a){
+      var s=bibtex(a);
+      var m=s.match(/^@article\{([^,]+),/);
+      if(m){
+        var base=m[1], k=base, n=2;
+        while(used[k]){ k=base+'_'+n; n++; }
+        used[k]=1;
+        s=s.replace(/^@article\{[^,]+,/, '@article{'+k+',');
+      }
+      parts.push(s);
+    });
+    download('JCST_search_results.bib',parts.join('\n\n')+'\n','application/x-bibtex');
+  }
+  function exportRis(){
+    if(!view.length) return;
+    download('JCST_search_results.ris',view.map(function(a){return ris(a);}).join('\n\n')+'\n','application/x-research-info-systems');
   }
   // ---- download a binary Blob (for .xlsx) ----
   function downloadBlob(name, bytes, mime){
@@ -663,9 +706,26 @@
   $('sort').addEventListener('click',function(){
     newest=!newest; this.textContent='Sort: '+(newest?'Newest first':'Title A–Z'); render();
   });
-  $('dl-csv').addEventListener('click',exportCSV);
-  $('dl-excel').addEventListener('click',exportExcel);
-  $('dl-json').addEventListener('click',exportJSON);
+  var dlMenu=$('dl-menu'), dlToggle=$('dl-toggle');
+  function closeDl(){ dlMenu.classList.remove('open'); dlToggle.setAttribute('aria-expanded','false'); }
+  dlToggle.addEventListener('click',function(e){
+    e.stopPropagation();
+    var open=dlMenu.classList.toggle('open');
+    dlToggle.setAttribute('aria-expanded',open?'true':'false');
+  });
+  dlMenu.addEventListener('click',function(e){
+    var b=e.target.closest('button[data-dl]'); if(!b) return;
+    var k=b.getAttribute('data-dl');
+    if(k==='csv') exportCSV();
+    if(k==='excel') exportExcel();
+    if(k==='json') exportJSON();
+    if(k==='bib') exportBibtex();
+    if(k==='ris') exportRis();
+    closeDl();
+  });
+  document.addEventListener('click',function(e){
+    if(!e.target.closest('#dl-wrap')) closeDl();
+  });
   window.addEventListener('scroll',function(){ $('top').style.display=window.scrollY>400?'block':'none'; });
   $('top').addEventListener('click',function(){ window.scrollTo({top:0,behavior:'smooth'}); });
 
