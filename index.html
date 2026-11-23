@@ -380,8 +380,15 @@
       if(q && a._s.indexOf(q)<0) return false;
       return true;
     });
+    function iss(a){ var n=parseInt(a.issue,10); return isNaN(n)?0:n; }
+    function pg(a){ var n=parseInt(a.firstpage,10); return isNaN(n)?0:n; }
     view.sort(function(a,b){
+      if(!newest) return (a.title||'').localeCompare(b.title||'');
       var r = a._y===b._y ? 0 : (a._y<b._y?1:-1);
+      if(r) return r;
+      r = iss(b)-iss(a);            // later issue first within the year
+      if(r) return r;
+      r = pg(a)-pg(b);              // reading order by first page within the issue
       if(r) return r;
       return (a.title||'').localeCompare(b.title||'');
     });
