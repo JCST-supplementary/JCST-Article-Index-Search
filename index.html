@@ -448,6 +448,18 @@
     el.href=u; el.download=name; document.body.appendChild(el); el.click();
     document.body.removeChild(el); URL.revokeObjectURL(u);
   }
+  // ---- export filename: active keyword (or topic) + YYMMDD ----
+  function exportBase(){
+    var q=($('q').value||'').trim(), tp=$('topic').value||'';
+    var base=q||tp||'JCST papers';
+    base=base.replace(/[\\/:*?"<>|\r\n\t]+/g,'_').replace(/\s+/g,' ').trim();
+    if(!base) base='JCST papers';
+    if(base.length>80) base=base.slice(0,80).trim();
+    var d=new Date();
+    var stamp=String(d.getFullYear()).slice(-2)
+      +('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2);
+    return base+'-'+stamp;
+  }
   // ---- export the CURRENT search result set (view) with full article info ----
   function csvCell(v){
     var s=String(v==null?'':v);
@@ -481,7 +493,7 @@
       lines.push(row.map(csvCell).join(','));
     });
     // BOM so Excel opens UTF-8 correctly
-    download('JCST_search_results.csv','\ufeff'+lines.join('\r\n'),'text/csv');
+    download(exportBase()+'.csv','\ufeff'+lines.join('\r\n'),'text/csv');
   }
   function exportJSON(){
     if(!view.length) return;
@@ -493,7 +505,7 @@
       });
       return o;
     });
-    download('JCST_search_results.json',JSON.stringify(out,null,2),'application/json');
+    download(exportBase()+'.json',JSON.stringify(out,null,2),'application/json');
   }
   // ---- batch citation export of the CURRENT view; unique keys across the set ----
   function exportBibtex(){
@@ -510,11 +522,11 @@
       }
       parts.push(s);
     });
-    download('JCST_search_results.bib',parts.join('\n\n')+'\n','application/x-bibtex');
+    download(exportBase()+'.bib',parts.join('\n\n')+'\n','application/x-bibtex');
   }
   function exportRis(){
     if(!view.length) return;
-    download('JCST_search_results.ris',view.map(function(a){return ris(a);}).join('\n\n')+'\n','application/x-research-info-systems');
+    download(exportBase()+'.ris',view.map(function(a){return ris(a);}).join('\n\n')+'\n','application/x-research-info-systems');
   }
   // ---- download a binary Blob (for .xlsx) ----
   function downloadBlob(name, bytes, mime){
@@ -660,7 +672,7 @@
       {name:'xl/styles.xml',data:enc.encode(styles)},
       {name:'xl/worksheets/sheet1.xml',data:enc.encode(sheet)}
     ]);
-    downloadBlob('JCST_search_results.xlsx',zip,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    downloadBlob(exportBase()+'.xlsx',zip,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   }
   function copied(btn){
     var old=btn.textContent; btn.textContent='Copied'; btn.classList.add('copied');
