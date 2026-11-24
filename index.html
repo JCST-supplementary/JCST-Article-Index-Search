@@ -326,6 +326,20 @@
     return f.length>6 ? f.slice(0,6).join(', ') + ' et al.' : f.join(', ');
   }
   var JOURNAL='Journal of Computer Science and Technology';
+  // 期刊名斜体仅用于网页展示与富文本复制，不写入 CSV/JSON/Excel 等纯文本导出
+  function citeHtml(s){
+    var str=String(s==null?'':s), i=str.indexOf(JOURNAL);
+    if(i<0) return esc(str);
+    return esc(str.slice(0,i))+'<i>'+esc(JOURNAL)+'</i>'+esc(str.slice(i+JOURNAL.length));
+  }
+  // 卡片展示：期刊名斜体 + 检索词高亮
+  function hlCite(s){
+    var str=String(s==null?'':s), i=str.indexOf(JOURNAL);
+    if(i<0) return hl(str);
+    return hl(str.slice(0,i))+'<i>'+hl(JOURNAL)+'</i>'+hl(str.slice(i+JOURNAL.length));
+  }
+  // 富文本剪贴板：只带斜体，不带检索高亮
+  function citeClipHtml(s){ return '<meta charset="utf-8"><span>'+citeHtml(s)+'</span>'; }
   function pages(a){ return a.firstpage ? (a.firstpage+'-'+(a.lastpage||a.firstpage)) : ''; }
   function citeIEEE(a){
     var s=authorIEEE(a)+', “'+a.title+'”, '+JOURNAL+', ';
@@ -433,13 +447,13 @@
         +(kws?'<div class="card-keywords"><span class="row-label kw-label">Keywords</span>'+kws+'</div>':'')
         +'<div class="cite-row">'
           +'<div class="cite-box"><div class="cite-content"><div class="cite-label">IEEE reference style</div>'
-            +'<div class="cite-text">'+hl(citeIEEE(a))+'</div></div>'
+            +'<div class="cite-text">'+hlCite(citeIEEE(a))+'</div></div>'
             +'<button type="button" class="cite-btn" data-act="copy-ieee">Copy</button></div>'
           +'<div class="cite-box acm"><div class="cite-content"><div class="cite-label">ACM reference format</div>'
-            +'<div class="cite-text">'+hl(citeACM(a))+'</div></div>'
+            +'<div class="cite-text">'+hlCite(citeACM(a))+'</div></div>'
             +'<button type="button" class="cite-btn" data-act="copy-acm">Copy</button></div>'
           +'<div class="cite-box jcst"><div class="cite-content"><div class="cite-label">JCST reference format</div>'
-            +'<div class="cite-text">'+hl(citeJCST(a))+'</div></div>'
+            +'<div class="cite-text">'+hlCite(citeJCST(a))+'</div></div>'
             +'<button type="button" class="cite-btn" data-act="copy-jcst">Copy</button></div>'
         +'</div>'
         +'<div class="detail">'
@@ -698,6 +712,18 @@
     if(navigator.clipboard){ navigator.clipboard.writeText(text).then(function(){copied(btn);}).catch(function(){fallback(text,btn);}); }
     else fallback(text,btn);
   }
+  // 富文本复制：Word/WPS 等保留期刊名斜体；纯文本目标自动取 text/plain
+  function copyRich(text,html,btn){
+    if(navigator.clipboard && window.ClipboardItem){
+      try{
+        var item=new ClipboardItem({'text/plain':new Blob([text],{type:'text/plain'}),
+                                    'text/html':new Blob([html],{type:'text/html'})});
+        navigator.clipboard.write([item]).then(function(){copied(btn);}).catch(function(){fallback(text,btn);});
+        return;
+      }catch(e){}
+    }
+    fallback(text,btn);
+  }
   function fallback(text,btn){
     var t=document.createElement('textarea'); t.value=text; document.body.appendChild(t);
     t.select(); try{document.execCommand('copy');copied(btn);}catch(e){} document.body.removeChild(t);
@@ -709,9 +735,9 @@
     var act=e.target.dataset.act;
     if(act){
       e.stopPropagation();
-      if(act==='copy-ieee') copy(citeIEEE(a),e.target);
-      if(act==='copy-acm') copy(citeACM(a),e.target);
-      if(act==='copy-jcst') copy(citeJCST(a),e.target);
+      if(act==='copy-ieee') copyRich(citeIEEE(a),citeClipHtml(citeIEEE(a)),e.target);
+      if(act==='copy-acm') copyRich(citeACM(a),citeClipHtml(citeACM(a)),e.target);
+      if(act==='copy-jcst') copyRich(citeJCST(a),citeClipHtml(citeJCST(a)),e.target);
       if(act==='ris') download(a.doi.replace(/[^A-Za-z0-9]/g,'_')+'.ris',ris(a));
       if(act==='bib') download(a.doi.replace(/[^A-Za-z0-9]/g,'_')+'.bib',bibtex(a));
       return;

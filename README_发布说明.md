@@ -50,7 +50,7 @@ git push -u origin main
 
 ## 提示
 
-- 网页顶部右侧是 **Download &#9662;** 下拉菜单，含 CSV / Excel / JSON / BibTeX / RIS 五项，导出的是**当前筛选结果**。其中 `Excel` 生成带格式的 `.xlsx`（故宫红表头加粗、冻结首行、按内容自动列宽与行高、摘要自动换行、带筛选器）；CSV / Excel / JSON 三种全字段导出均含 **IEEE / ACM / JCST 三种引用文本**（与卡片内复制按钮内容一致，分别位于表格末三列、JSON 的 `citation_ieee` / `citation_acm` / `citation_jcst` 字段）；`BibTeX` / `RIS` 生成批量引文文件（`.bib` / `.ris`），字段与文章卡片上的单篇导出一致，BibTeX 引用键在批量导出时自动去重。全部由网页内置生成器完成，**无外部库依赖**，无需额外上传文件。点选后菜单自动收起；再次点击按钮或点击页面其他位置可关闭菜单。文章卡片内另有单篇 **RIS / BibTeX** 按钮，以及 IEEE / ACM / JCST 三种引文格式的复制按钮。
+- 网页顶部右侧是 **Download &#9662;** 下拉菜单，含 CSV / Excel / JSON / BibTeX / RIS 五项，导出的是**当前筛选结果**。其中 `Excel` 生成带格式的 `.xlsx`（故宫红表头加粗、冻结首行、按内容自动列宽与行高、摘要自动换行、带筛选器）；CSV / Excel / JSON 三种全字段导出均含 **IEEE / ACM / JCST 三种引用文本**（与卡片内复制按钮内容一致，分别位于表格末三列、JSON 的 `citation_ieee` / `citation_acm` / `citation_jcst` 字段）；`BibTeX` / `RIS` 生成批量引文文件（`.bib` / `.ris`），字段与文章卡片上的单篇导出一致，BibTeX 引用键在批量导出时自动去重。全部由网页内置生成器完成，**无外部库依赖**，无需额外上传文件。点选后菜单自动收起；再次点击按钮或点击页面其他位置可关闭菜单。文章卡片内另有单篇 **RIS / BibTeX** 按钮，以及 IEEE / ACM / JCST 三种引文格式的复制按钮。三种引文在网页上**期刊名显示为斜体**（符合 IEEE / ACM / JCST 样式）；复制采用富文本+纯文本双格式写入剪贴板——粘贴到 Word / WPS 等富文本编辑器保留斜体，粘贴到纯文本环境（记事本、命令行等）自动降级为纯文本，不含任何标记。导出文件中的三种引用文本始终为纯文本，不含斜体标记。
 - 网页里所有资源都用**相对路径**引用（`articles.js`、`topic_groups.js`、`jcst_logo_transparent.png`），所以放在仓库子路径下也能正常显示，无需改代码。
 - 主题下拉框按官方领域分组显示：分组定义在 `topic_groups.js`。交叉主题会同时出现在其涉及的多个领域下（网上任一组选中都能筛到该主题）。如需调整归属，改 `build_topic_groups.py` 里的 GROUPS 后重跑，会同步重建 `topic_groups.js` / `.json` 和 `topic_domains.json`。
 - 若更新后页面没变化，多为浏览器缓存，按 `Ctrl+F5` 强制刷新；或等 GitHub Pages 重新构建（约 1 分钟）。
