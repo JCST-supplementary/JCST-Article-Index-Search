@@ -475,7 +475,8 @@
   function exportCSV(){
     if(!view.length) return;
     var cols=['No.','Title','Authors','Affiliations','Year','Volume','Issue','First Page','Last Page',
-      'Type','Research Areas','Keywords','Abstract','DOI','Journal Page','PDF','Type Origin'];
+      'Type','Research Areas','Keywords','Abstract','DOI','Journal Page','PDF','Type Origin',
+      'IEEE Citation','ACM Citation','JCST Citation'];
     var lines=[cols.map(csvCell).join(',')];
     view.forEach(function(a,i){
       var row=[
@@ -495,7 +496,10 @@
         a.doi,
         a.url,
         a.pdf,
-        a.type_origin
+        a.type_origin,
+        citeIEEE(a),
+        citeACM(a),
+        citeJCST(a)
       ];
       lines.push(row.map(csvCell).join(','));
     });
@@ -510,6 +514,9 @@
        'year','type','research_area','url','pdf','affiliations','type_origin'].forEach(function(k){
         if(a[k]!==undefined) o[k]=a[k];
       });
+      o.citation_ieee=citeIEEE(a);
+      o.citation_acm=citeACM(a);
+      o.citation_jcst=citeJCST(a);
       return o;
     });
     download(exportBase()+'.json',JSON.stringify(out,null,2),'application/json');
@@ -580,7 +587,8 @@
     (a.affiliations||[]).join('; '),
     a.year, a.volume, a.issue, a.firstpage, a.lastpage, a._t,
     (a.research_area||[]).join('; '), (a.keywords||[]).join('; '),
-    a.abstract, a.doi, a.url, a.pdf, a.type_origin
+    a.abstract, a.doi, a.url, a.pdf, a.type_origin,
+    citeIEEE(a), citeACM(a), citeJCST(a)
   ];});}
   function exportExcel(){
     if(!view.length) return;
@@ -588,7 +596,8 @@
       ['No.',6,6,'n'],['Title',60,14,''],['Authors',40,12,''],['Affiliations',34,12,''],
       ['Year',8,8,'n'],['Volume',8,8,'n'],['Issue',7,7,'n'],['First Page',10,10,'n'],['Last Page',10,10,'n'],
       ['Type',14,13,''],['Research Areas',34,16,''],['Keywords',38,16,''],['Abstract',80,24,''],
-      ['DOI',30,24,''],['Journal Page',46,20,''],['PDF',46,20,''],['Type Origin',13,13,'']
+      ['DOI',30,24,''],['Journal Page',46,20,''],['PDF',46,20,''],['Type Origin',13,13,''],
+      ['IEEE Citation',80,30,''],['ACM Citation',80,30,''],['JCST Citation',80,30,'']
     ];
     var rows=xlsxRows();
     var widths=meta.map(function(m,j){
