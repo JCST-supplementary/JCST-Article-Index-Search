@@ -369,17 +369,35 @@
     }
     return s+' DOI: '+a.doi+'.';
   }
+  function bibEscape(s){
+    return String(s==null?'':s).replace(/\\/g,'\\textbackslash{}')
+      .replace(/([{}&%$#_])/g,'\\$1')
+      .replace(/~/g,'\\textasciitilde{}').replace(/\^/g,'\\textasciicircum{}');
+  }
   function bibtex(a){
     var key=((a.authors&&a.authors[0])?a.authors[0].last:'article')+a.year+(a.title.split(/\s+/)[0]||'');
     key=key.replace(/[^A-Za-z0-9]/g,'');
-    return '@article{'+key+',\n  title   = {'+a.title+'},\n  author  = {'+
-      (a.authors||[]).map(function(x){return x.first+' '+x.last;}).join(' and ')+'},\n  journal = {Journal of Computer Science and Technology},\n  volume  = {'+a.volume+'},\n  number  = {'+a.issue+'},\n  pages   = {'+pages(a)+'},\n  year    = {'+a.year+'},\n  doi     = {'+a.doi+'}\n}';
+    var authors=(a.authors||[]).map(function(x){return bibEscape((x.first+' '+x.last).trim());}).join(' and ');
+    var fields=[];
+    function add(name,val){ if(val!==null && val!==undefined && String(val).trim()!=='') fields.push('  '+name+' = {'+val+'},'); }
+    add('title',bibEscape(a.title));
+    if(authors) add('author',authors);
+    add('journal',bibEscape(JOURNAL));
+    add('volume',a.volume);
+    add('number',a.issue);
+    add('pages',pages(a));
+    add('year',a.year);
+    add('doi',a.doi);
+    var body=fields.join('\n').replace(/,$/,'');
+    return '@article{'+key+',\n'+body+'\n}';
   }
   function ris(a){
-    var lines=['TY  - JOUR','TI  - '+a.title,'JO  - Journal of Computer Science and Technology',
-      'VL  - '+a.volume,'IS  - '+a.issue,'SP  - '+a.firstpage,'EP  - '+a.lastpage,'PY  - '+a.year,'DO  - '+a.doi];
-    (a.authors||[]).forEach(function(x){lines.push('AU  - '+x.first+' '+x.last);});
-    (a.keywords||[]).forEach(function(k){lines.push('KW  - '+k);});
+    var lines=['TY  - JOUR','TI  - '+a.title,'JO  - '+JOURNAL];
+    function add(tag,val){ if(val!==null && val!==undefined && String(val).trim()!=='') lines.push(tag+'  - '+val); }
+    add('VL',a.volume); add('IS',a.issue); add('SP',a.firstpage); add('EP',a.lastpage);
+    add('PY',a.year); add('DO',a.doi);
+    (a.authors||[]).forEach(function(x){ var n=(x.first+' '+x.last).trim(); if(n) lines.push('AU  - '+n); });
+    (a.keywords||[]).forEach(function(k){ if(String(k).trim()) lines.push('KW  - '+k); });
     lines.push('ER  - ');
     return lines.join('\n');
   }
