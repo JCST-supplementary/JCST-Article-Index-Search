@@ -325,6 +325,15 @@
     var f=(a.authors||[]).map(function(x){return (x.first+' '+x.last).trim();});
     return f.length>6 ? f.slice(0,6).join(', ') + ' et al.' : f.join(', ');
   }
+  // JCST 正文参考文献格式：姓在前，名缩写为首字母（空格分隔，无点）
+  // 例：Zhi-Wei Xu -> Xu Z W；Derek F. Wong -> Wong D F
+  function authorJCST(a){
+    return (a.authors||[]).map(function(x){
+      var ini=(x.first||'').split(/[-\s.]+/).filter(Boolean)
+        .map(function(p){return p.charAt(0).toUpperCase();}).join(' ');
+      return (x.last||'').trim()+(ini?' '+ini:'');
+    }).join(', ');
+  }
   var JOURNAL='Journal of Computer Science and Technology';
   // 期刊名斜体仅用于网页展示与富文本复制，不写入 CSV/JSON/Excel 等纯文本导出
   function citeHtml(s){
@@ -360,7 +369,7 @@
     return s+' DOI: '+a.doi+'.';
   }
   function citeJCST(a){
-    var authors=(a.authors||[]).map(function(x){return (x.first+' '+x.last).trim();}).join(', ');
+    var authors=authorJCST(a);
     var s=authors+'. '+a.title+'. '+JOURNAL+', '+a.year+', ';
     if(a.volume && a.issue && a.firstpage){
       s+=a.volume+'('+a.issue+'): '+pages(a)+'.';
